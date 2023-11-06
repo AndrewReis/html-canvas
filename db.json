@@ -1,0 +1,88 @@
+{
+  "char": {
+    "name": "capitao america",
+    "key": "cap",
+    "anims": [
+      {
+        "repeat": true,
+        "frameRate": 8,
+        "prefix": "idle",
+        "suffix": ".png",
+        "end": 8,
+        "zeroPad": 1,
+        "key": "idle"
+      },
+      {
+        "repeat": false,
+        "frameRate": 8,
+        "prefix": "action1_",
+        "suffix": ".png",
+        "end": 8,
+        "zeroPad": 1,
+        "key": "action1"
+      }
+    ],
+    "skills": [
+      { "id": 1, "name": "action 1" },
+      { "id": 2, "name": "action 2" }
+    ]
+  },
+
+  "team": [
+    {
+      "name": "capitao america",
+      "key": "cap",
+      "anims": [
+        {
+          "repeat": true,
+          "frameRate": 8,
+          "prefix": "idle",
+          "suffix": ".png",
+          "end": 8,
+          "zeroPad": 1,
+          "key": "idle"
+        },
+        {
+          "repeat": false,
+          "frameRate": 8,
+          "prefix": "action1_",
+          "suffix": ".png",
+          "end": 8,
+          "zeroPad": 1,
+          "key": "action1"
+        }
+      ],
+      "skills": [
+        { "id": 1, "name": "action 1", "key": "action1" },
+        { "id": 2, "name": "action 2" }
+      ]
+    }
+  ],
+
+  "teamOpponent": [
+    {
+      "name": "Thor",
+      "key": "thor",
+      "anims": [
+        {
+          "repeat": true,
+          "frameRate": 8,
+          "prefix": "idle",
+          "suffix": ".png",
+          "end": 8,
+          "zeroPad": 1,
+          "key": "idle"
+        },
+        {
+          "repeat": false,
+          "frameRate": 8,
+          "prefix": "action1_",
+          "suffix": ".png",
+          "end": 8,
+          "zeroPad": 1,
+          "key": "action1"
+        }
+      ]
+    }
+  ]
+}
