@@ -13,7 +13,7 @@ interface State {
 	},
 	allChars: ICharacter[];
 	skillsBlocked: ISkill[],
-	currentChar: ICharacter | null;
+	currentChar: ICharacter;
 	previusChar: ICharacter | null;
 	currentCharIndex: number;
 	round: number;
@@ -78,7 +78,7 @@ export class Battle {
 			round: 1,
 			currentCharIndex: 0,
 			previusChar: null,
-			currentChar: null,
+			currentChar: {} as ICharacter,
 			orderChars: false,
 			allChars: [ ...user.team, ...adversary.team ],
 			skillsBlocked: [],
@@ -90,16 +90,18 @@ export class Battle {
 				}
 			}
 		};
+
+		this.state.currentChar = this.state.allChars[this.state.currentCharIndex];
 	}
 
+	// 0
 	public init() {
 		this.orderedCharsByVelocity();
 		this.setCurrentChar();
 	}
 
+	// 0
 	public getState() {
-		if (!this.state.currentChar) throw new Error('Char not found');
-		
 		const isUserChar = this.state.players.user.team.some(char => char.id === this.state.currentChar?.id);
 		const currentChar = isUserChar ? this.state.currentChar : { id: this.state.currentChar.id, name: this.state.currentChar.name, attrs: this.state.currentChar.attrs };
 		return {
@@ -113,40 +115,48 @@ export class Battle {
 		};
 	}
 
+	// 0
 	public execute(skillId: string, targetId: string) {
+		this.checkSkillsAvailables();
+		
 		const character = this.getCurrentCharacter();
 		
 		const target = this.state.allChars.find(char => char.id === targetId);
-		if (!target) throw new Error('Invalid Target');
-		
-		const skill = character.skills.find(s => s.id === skillId);
-		if (!skill) throw new Error('Invalid Skill');
+		const skill  = character.skills.find(s => s.id === skillId);
 
-		const skillAvailable = this.state.skillsBlocked.some(skillBlocked => skillBlocked.id === skill.id);
-		if (skillAvailable) throw new Error('Skill unavailable');
-
-		if (skill.type === 'damage') {
-			target.attrs.health -= skill.value;
-			character.attrs.stamina -= skill.cost;
-		}
-
-		if (target.attrs.health <= 0) {
-			this.state.orderChars = true;
-			this.state.allChars = this.state.allChars.filter(c => c.id !== target.id);
-
-			this.state.allChars.forEach((c, i) => {
-				if (c.id === character.id) {
-					this.state.currentCharIndex = i + 1;
+		if (target && skill) {
+			const skillAvailable = this.state.skillsBlocked.some(skillBlocked => skillBlocked.id === skill.id);
+			if (!skillAvailable) {
+				if (skill.type === 'damage') {
+					target.attrs.health -= skill.value;
+					character.attrs.stamina -= skill.cost;
 				}
-			});
-		} else {
-			this.state.orderChars = false;
-		}
 		
-		this.checkSkillsAvailables();
+				if (target.attrs.health <= 0) {
+					// this.state.orderChars = true;
+					this.state.allChars = this.state.allChars.filter(c => c.id !== target.id);
+		
+					this.state.allChars.forEach((c, i) => {
+						if (c.id === character.id) {
+							this.state.currentCharIndex = i + 1;
+						}
+					});
+				} 
+				// else {
+				// 	this.state.orderChars = false;
+				// }
+				this.nextTurn();
+				this.setCurrentChar();
+				return;
+			}
+		}
+
+		this.rechargeStamina();
 		this.nextTurn();
+		this.setCurrentChar();
 	}
 
+	// 1
 	public rechargeStamina() {
 		const character = this.getCurrentCharacter();
 
@@ -157,12 +167,9 @@ export class Battle {
 		if (character.attrs.stamina >= 100) {
 			character.attrs.stamina = 100;
 		}
-
-		this.state.orderChars = false;
-		this.checkSkillsAvailables();
-		this.nextTurn();
 	}
 
+	// 1
 	private checkSkillsAvailables() {
 		const character = this.getCurrentCharacter();
 		if (character) {
@@ -181,18 +188,22 @@ export class Battle {
 		}
 	}
 
+	// 1
 	private orderedCharsByVelocity() {
 		this.state.allChars.sort((a, b) => b.attrs.speed - a.attrs.speed);
 	}
 
-	private getCurrentCharacter() {
+	// 4
+	public getCurrentCharacter() {
 		return this.state.allChars[this.state.currentCharIndex];
 	}
 
+	// 3
 	private setCurrentChar() {
 		this.state.currentChar = this.state.allChars[this.state.currentCharIndex];
 	}
 
+	// 0
 	public checkIATurn() {
 		const character = this.getCurrentCharacter();
 		if (!character) throw new Error('Character not found');
@@ -204,31 +215,25 @@ export class Battle {
 			this.state.iaCommands = this.ia.choosenAction(this.state.players.user.team);
 
 			return this.state.iaCommands;
-
-			// if (!this.state.iaCommands.isRecharge && this.state.iaCommands.event.skillId) {
-			// 	this.execute(this.state.iaCommands.event.skillId, this.state.iaCommands.event.targetId);
-			// } else {
-			// 	this.rechargeStamina();
-			// }
 		}
 	}
 
+	// 2
 	private nextTurn() {
 		// const adversaryChar = this.state.players.adversary.team.some(char => char.id === this.state.allChars[this.state.currentCharIndex].id);
 
 		// if (!this.state.orderChars) {
-		// this.state.currentCharIndex++;
 		// }
+			
+		this.state.currentCharIndex++;
 
 		if(this.state.currentCharIndex >= this.state.allChars.length) {
 			this.state.currentCharIndex = 0;
 			this.state.round++;
 		}
-
-		this.setCurrentChar();
-		// this.checkIATurn();
 	}
 
+	// 0
 	public checkGameIsOver() {
 		const userTeam: ICharacter[] 			= [];
 		const adversaryTeam: ICharacter[] = [];
