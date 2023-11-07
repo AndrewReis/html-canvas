@@ -3,7 +3,7 @@
 - [] adicionar luz no personagem atual
 - [] diminuir opacidade dos personagens que estao esperando seu turno
 - [x] mostrar skills apenas da equipe do usuario
-- [] mostrar skills do personagem atual
+- [x] mostrar skills do personagem atual
 - [x] adicionar bordas nos alvos disponiveis da acao da skill
 - [x] selecionar skill e alvo
 - [x] enviar todas as acoes para o back-end
@@ -12,4 +12,23 @@
 - [x] Toda regra de negocio sera validada no back-end
 - [x] Usar websocket para validar as acoes da partida
 - [x] Usar http para buscar personagens e adversarios
-- [] PVP contra IA apenas
+- [x] PVP contra IA apenas
+
+# Use-cases (server)
+- [] deve validar se a skill escolhida existe
+- [] deve validar se a skill escolhida está disponivel
+- [] deve validar se o target existe
+- [] deve acrescentar em 1 o currentIndex quando o personagem da vez terminar seu turno
+- [] deve subtrair a stamina do personagem da vez quando ele usar uma skill
+- [] deve bloquear a skill caso o custo dela seja menor que a stamina do dono dela.
+- [] deve subtrair a vida do target quando ele sofre dano de uma skill
+- [] deve remover os personagens cujo a vida é zero
+- [] deve passar a vez quando o personagem da vez recarregar sua stamina
+- [] deve desbloquear a skill caso o seu dono tenha o minimo de stamina para usa-la
+- [] deve validar se é a vez da IA
+- [] deve ser possivel a IA escolher seu alvo e skill
+- [] deve ser possivel enviar a escolha da IA para o phaser3
+- [] deve ganhar o jogo caso a IA nao tenha mais personagens
+- [] deve perder o jogo caso o user nao tenha mais personagens
+- [] deve ser possivel salvar o estado do jogo quando ele terninar.
+- [] deve perder o jogo caso o user se desconecte do socket

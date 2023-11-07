@@ -27,10 +27,26 @@ io.on('connection', async (socket) => {
 
 	socket.emit(socketEvents.initState, battle.getState());
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	socket.on('ACAO', ({ skillId, target }) => {
-		console.log(skillId, target);
-		// battle.execute(skillId, target);
+	socket.on('EXECUTE_ACTION', ({ skillId, targetId }) => {
+		battle.execute(skillId, targetId);
+		socket.emit('NEXT_TURN', battle.getState());
+
+		const iaCommands = battle.checkIATurn();
+
+		if (iaCommands) {
+			socket.emit('IA_COMMANDS', iaCommands);
+		}
+	});
+
+	socket.on('RECHARGE_STAMINA', () => {
+		battle.rechargeStamina();
+		socket.emit('NEXT_TURN', battle.getState());
+
+		const iaCommands = battle.checkIATurn();
+
+		if (iaCommands) {
+			socket.emit('IA_COMMANDS', iaCommands);
+		}
 	});
 });
 

@@ -1,100 +1,3 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-
-<body>
-
-  <script type="module">
-    import { createSprite } from './sprites.js';
-    const socket = io();
-
-    async function getData() {
-      const data = await fetch('http://localhost:3000/char');
-      const res = await data.json();
-      return res;
-    }
-
-    async function getTeam() {
-      const data = await fetch('http://localhost:3000/team');
-      const res = await data.json();
-      return res;
-    }
-
-    async function getTeamO() {
-      const data = await fetch('http://localhost:3000/teamOpponent');
-      const res = await data.json();
-      return res;
-    }
-
-    const result = await getData();
-    const results = await getTeam();
-    const teamOpponent = await getTeamO();
-
-    class Example extends Phaser.Scene {
-      #userTeam = results;
-      #teamOpponent = teamOpponent;
-
-      #char = null;
-      #oChar = null;
-
-      preload() {
-        this.load.atlas('cap', 'assets/captain/cap.png', 'assets/captain/cap.json');
-      }
-
-      create() {
-        this.#char = createSprite(this.#userTeam[0], this, { x: 200, y: 200, isFlip: false });
-        this.#oChar = createSprite(this.#teamOpponent[0], this, { x: 600, y: 200, isFlip: true });
-
-        // Draw Skills
-        const txt0 = this.add.text(100, 400, this.#char.skills[0].name, { color: '#00ff00' }).setOrigin(0, 0.5);
-        const txt1 = this.add.text(200, 400, this.#char.skills[1].name, { color: '#00ff00' }).setOrigin(0, 0.5);
-
-        txt0.setInteractive();
-        txt1.setInteractive();
-
-        txt0.on('pointerdown', () => {
-          this.#char.skillSelected(this.#char.skills[0].id);
-        });
-
-        txt1.on('pointerdown', () => {
-          console.log(this.#char.skills[1].name)
-        });
-
-        this.#oChar.sprite.on('pointerover', () => {
-          this.#oChar.sprite.setTint(0x7878ff);
-        });
-
-        this.#oChar.sprite.on('pointerout', () => {
-          this.#oChar.sprite.clearTint();
-        });
-
-        this.#oChar.sprite.on('pointerdown', () => {
-          this.#char.targetSelected(this.#oChar);
-        });
-      }
-
-      // update() {
-      //   // enable action effects
-      //   // const { enableSkillAction } = this.#char.update();
-      //   // if (enableSkillAction) {
-      //   // }
-      // }
-    }
-
-    const config = {
-      type: Phaser.AUTO,
-      pixelArt: true,
-      width: 800,
-      height: 600,
-      scene: Example
-    };
-
-    const game = new Phaser.Game(config);
-  </script>
-
-</body>
-
-</html> -->
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -104,6 +7,11 @@
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <title>Document</title>
+  <style>
+    body {
+      background-color: black;
+    }
+  </style>
 </head>
 
 <body>
@@ -112,7 +20,7 @@
   <script type="module">
     // dependencies
     import { socketEvents } from './config.js';
-    import { createSprite, createSpriteDemo } from './sprites.js';
+    import { Sprite } from './sprites.js';
 
     const socket = io();
 
@@ -123,6 +31,7 @@
     // CONECTION WITH SERVER
     socket.on(socketEvents.initState, (state) => {
       initGame(state);
+      console.log('INIT', state)
     });
 
     function initGame(state) {
@@ -132,65 +41,154 @@
         #userTeam = [];
         #adversaryTeam = [];
 
+        #currentUserChar = null;
+
+        action01 = null;
+        action02 = null;
+        recharge = null;
+
+        txt = null;
+
         preload() {
           this.#STATE = state;
-          console.log('STATE --->', state)
           this.load.atlas('cap', 'assets/captain/cap.png', 'assets/captain/cap.json');
         }
 
         create() {
+          this.txt = this.add.text(0, 0, `CURRENT --> ${this.#STATE.currentChar.name}`, { color: '#00ff00' });
           let c = 1;
           for (const userChar of this.#STATE.userTeam) {
-            this.#userTeam.push(createSpriteDemo(userChar, this, { x: 200, y: 100 * c, isFlip: false }));
+            const sprite = new Sprite(this, userChar, { x: 200, y: 150 * c, isFlip: false });
+
+            this.#userTeam.push(sprite);
             c++
           }
 
           let y = 1;
           for (const adversaryChar of this.#STATE.adversaryTeam) {
-            this.#adversaryTeam.push(createSpriteDemo(adversaryChar, this, { x: 400, y: 100 * y, isFlip: true }));
+            this.#adversaryTeam.push(new Sprite(this, adversaryChar, { x: 400, y: 150 * y, isFlip: true }));
             y++
           }
 
-          // Draw Skills
-          if (Object.keys(this.#STATE.currentChar).includes('skills')) {
-            this.drawSkills();
-          }
+          this.drawSkills();
 
-          const char = this.#userTeam.find(c => c.id === this.#STATE.currentChar.id);
+          this.#adversaryTeam.forEach(adversaryChar => {
+            adversaryChar.on('pointerdown', () => {
+              this.#currentUserChar.targetSelected(adversaryChar.id);
+              this.#currentUserChar.emitEvent(socket);
+              this.#enableTargets = false;
+            });
+          });
 
-          this.#adversaryTeam[0].sprite.on('pointerdown', () => {
-            char.targetSelected(this.#adversaryTeam[0].name);
-            this.#enableTargets = false;
+          socket.on('NEXT_TURN', (state) => {
+            this.updateState(state);
+          });
+
+          // IA
+          socket.on('IA_COMMANDS', data => {
+            // setTimeout(() => {
+              if (data.isRecharge) {
+                this.#currentUserChar.rechargeStamina(socket);
+              } else {
+                this.#currentUserChar.skillSelected(data.event.skillId);
+                this.#currentUserChar.targetSelected(data.event.targetId);
+                this.#currentUserChar.emitEvent(socket);
+              }
+            // }, 2000);
           });
         }
 
         update() {
+          this.txt.setText(`CURRENT --> ${this.#STATE.currentChar.name}`)
+
           if (this.#enableTargets) {
-            this.#adversaryTeam[0].sprite.setTint(0x7878ff);
+            this.#adversaryTeam.forEach(adversaryChar => {
+              adversaryChar.setTint(0x7878ff);
+            });
           } else {
-            this.#adversaryTeam[0].sprite.clearTint();
+            this.#adversaryTeam.forEach(adversaryChar => {
+              adversaryChar.clearTint();
+            });
+          }
+
+          // Draw Skills
+          if (Object.keys(this.#STATE.currentChar).includes('skills')) {
+            this.updateDrawSkills();
+          } else {
+            this.disableDrawSkills();
           }
         }
 
+        updateDrawSkills() {
+          this.action01.setText(this.#STATE.currentChar.skills[0].name)
+          this.action02.setText(this.#STATE.currentChar.skills[1].name)
+          this.recharge.setText('RECARGA')
+        }
+
+        disableDrawSkills() {
+          this.action01.destroy();
+          this.action02.destroy();
+          this.recharge.destroy();
+        }
+
         drawSkills() {
-          const action01 = this.add.text(50, 400, this.#STATE.currentChar.skills[0].name, { color: '#00ff00' }).setInteractive();
-          const action02 = this.add.text(200, 400, this.#STATE.currentChar.skills[1].name, { color: '#00ff00' }).setInteractive();
-          const recharge = this.add.text(300, 400, 'RECARGA', { color: '#00ff00' }).setInteractive();
+          if (Object.keys(this.#STATE.currentChar).includes('skills')) {
+            const char = this.#userTeam.find(c => c.id === this.#STATE.currentChar.id);
+            this.#currentUserChar = char;
+
+            this.action01 = this.add.text(50, 400, this.#STATE.currentChar.skills[0].name, { color: '#00ff00' }).setInteractive();
+            this.action02 = this.add.text(200, 400, this.#STATE.currentChar.skills[1].name, { color: '#00ff00' }).setInteractive();
+            this.recharge = this.add.text(300, 400, 'RECARGA', { color: '#00ff00' }).setInteractive();
+
+            this.action01.on('pointerdown', () => {
+              this.#currentUserChar.skillSelected(this.#STATE.currentChar.skills[0].id);
+              this.#enableTargets = true;
+            });
+
+            this.action02.on('pointerdown', () => {
+              this.#currentUserChar.skillSelected(this.#STATE.currentChar.skills[1].id);
+              this.#enableTargets = true;
+            });
+
+            this.recharge.on('pointerdown', () => {
+              this.#currentUserChar.rechargeStamina(socket);
+              this.#enableTargets = false;
+            });
+          }
+        }
+
+        updateState(state) {
+          this.#STATE = state;
 
           const char = this.#userTeam.find(c => c.id === this.#STATE.currentChar.id);
 
-          action01.on('pointerdown', () => {
-            char.skillSelected(char.skills[0].id);
-            this.#enableTargets = true;
-          });
+          for (const stateChar of state.userTeam) {
+            for (const userChar of this.#userTeam) {
+              if (stateChar.id === userChar.id) {
+                userChar.updateHealthBar(stateChar.attrs.health);
+                userChar.updateStaminaBar(stateChar.attrs.stamina);
+              }
+            }
+          }
 
-          action02.on('pointerdown', () => {
-            char.skillSelected(char.skills[1].id);
-          });
+          for (const stateAdversaryChar of state.adversaryTeam) {
+            for (const adversaryChar of this.#adversaryTeam) {
+              if (stateAdversaryChar.id === adversaryChar.id) {
+                adversaryChar.updateHealthBar(stateAdversaryChar.attrs.health);
+                adversaryChar.updateStaminaBar(stateAdversaryChar.attrs.stamina);
+              }
+            }
+          }
 
-          recharge.on('pointerdown', () => {
-            console.log('recarregar')
-          });
+          console.log(char)
+          if (char) {
+            this.#currentUserChar = char;
+          } else {
+            const adversaryChar = this.#adversaryTeam.find(c => c.id === this.#STATE.currentChar.id);
+            this.#currentUserChar = adversaryChar;
+          }
+
+          console.log('STATE UPDATED ', this.#STATE)
         }
       }
 
@@ -204,8 +202,6 @@
 
       const game = new Phaser.Game(config);
     }
-
-    // GAME
   </script>
 </body>
 
