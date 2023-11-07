@@ -17,7 +17,7 @@ const naruto: ICharacter = {
 	attrs: {
 		health: 100,
 		stamina: 100,
-		speed: 5
+		speed: 10
 	},
 	skills: skills.filter(s => s.charId === 'naruto-id')
 };

@@ -15,16 +15,16 @@
 - [x] PVP contra IA apenas
 
 # Use-cases (server)
-- [] deve validar se a skill escolhida existe
-- [] deve validar se a skill escolhida está disponivel
-- [] deve validar se o target existe
-- [] deve acrescentar em 1 o currentIndex quando o personagem da vez terminar seu turno
-- [] deve subtrair a stamina do personagem da vez quando ele usar uma skill
-- [] deve bloquear a skill caso o custo dela seja menor que a stamina do dono dela.
-- [] deve subtrair a vida do target quando ele sofre dano de uma skill
-- [] deve remover os personagens cujo a vida é zero
+- [x] deve validar se a skill escolhida existe
+- [x] deve validar se a skill escolhida está disponivel
+- [x] deve validar se o target existe
+- [x] deve acrescentar em 1 o currentIndex quando o personagem da vez terminar seu turno
+- [x] deve subtrair a stamina do personagem da vez quando ele usar uma skill
+- [x] deve bloquear a skill caso o custo dela seja menor que a stamina do dono dela.
+- [x] deve subtrair a vida do target quando ele sofre dano de uma skill
+- [x] deve remover os personagens cujo a vida é zero
 - [] deve passar a vez quando o personagem da vez recarregar sua stamina
-- [] deve desbloquear a skill caso o seu dono tenha o minimo de stamina para usa-la
+- [x] deve desbloquear a skill caso o seu dono tenha o minimo de stamina para usa-la
 - [] deve validar se é a vez da IA
 - [] deve ser possivel a IA escolher seu alvo e skill
 - [] deve ser possivel enviar a escolha da IA para o phaser3
