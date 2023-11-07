@@ -1,131 +1,124 @@
 /* eslint-disable no-undef */
-import { socketEvents } from './config.js';
+class HealthBar {
+	constructor(scene, x, y) {
+		this.bar = new Phaser.GameObjects.Graphics(scene);
+		this.x = x;
+		this.y = y;
+		this.value = 100;
+		this.p = 76 / 100;
+		this.draw();
+		scene.add.existing(this.bar);
+	}
 
-export function createSprite(char, phaserCtx, { x, y, isFlip }) {
-	const state = char;
-	const phaser = phaserCtx;
-	const sprite = phaser.add.sprite(x, y).setInteractive();
-	let enableSkillAction = false;
+	decrease(amount) {
+		this.value = amount;
+		if (this.value < 0) {
+			this.value = 0;
+		}
+		this.draw();
+		return (this.value === 0);
+	}
 
-	const event = {
-		skill: null,
-		target: null
-	};
+	draw() {
+		this.bar.clear();
+		this.bar.fillStyle(0xffffff);
+		this.bar.fillRect(this.x + 2, this.y + 2, 76, 12);
 
-	sprite.setFlipX(isFlip);
+		if (this.value < 30) {
+			this.bar.fillStyle(0xff0000);
+		} else {
+			this.bar.fillStyle(0x00ff00);
+		}
 
-	const skillSelected = (skillId) => {
-		const skill = state.skills.find(s => s.id === skillId);
-		console.log(skill);
-		if (!skill) throw new Error('Skill not found');
-
-		enableSkillAction = true;
-		event.skill 			= skill;
-	};
-
-	const targetSelected = (target) => {
-		event.target = target;
-		if (!event.skill || !event.target) throw new Error('Invalid Action');
-	};
-
-	const emitEvent = (socket) => {
-		socket.emit(socketEvents.charAction, {
-			skillId: event.skill.id,
-			target: event.target
-		});
-
-		sprite.x = 400;
-		sprite.play('action1');
-
-		sprite.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-			sprite.x = 200;
-			sprite.play('idle');
-		});
-
-		event.skill  = null;
-		event.target = null;
-	};
-
-	const update = () => {
-		return {
-			enableSkillAction
-		};
-	};
-
-	const createAnims = () => {
-		state.anims.forEach(anim => {
-			phaser.anims.create({
-				key: anim.key,
-				frameRate: anim.frameRate,
-				repeat: anim.repeat ? -1 : 0,
-				frames: phaser.anims.generateFrameNames(state.key, {
-					prefix: anim.prefix,
-					suffix: anim.suffix,
-					end: anim.end,
-					zeroPad: anim.zeroPad
-				}),
-			});
-		});
-
-		sprite.play('idle');
-	};
-
-	createAnims();
-
-	return {
-		...state,
-		sprite,
-		enableSkillAction,
-		skillSelected,
-		targetSelected,
-		update,
-		emitEvent
-	};
+		var d = Math.floor(this.p * this.value);
+		this.bar.fillRect(this.x + 2, this.y + 2, d, 12);
+	}
 }
 
-export function createSpriteDemo(character, game, { x, y, isFlip }) {
-	const char	 = character;
-	const phaser = game;
-	const sprite = phaser.add.sprite(x, y, 'cap', 'attack_A/frame0000').setInteractive();
-	const event = {
-		skillId: null,
-		targetId: null
-	};
-		
-	sprite.setFlipX(isFlip);
+class StaminaBar {
+	constructor(scene, x, y) {
+		this.bar = new Phaser.GameObjects.Graphics(scene);
+		this.x = x;
+		this.y = y;
+		this.value = 100;
+		this.p = 76 / 100;
+		this.draw();
+		scene.add.existing(this.bar);
+	}
 
-	const skillSelected = (skillId) => {
-		console.log('skill', skillId);
-		event.skillId = skillId;
-	};
-
-	const targetSelected = (target) => {
-		if (event.skillId) {
-			console.log('target', target);
-			event.targetId = target;
-
-			// emit // logic
-			event.skillId = null;
-			event.targetId = null;
-
-			// back-end 
-			// check skill and target
-			// checar se skill é do currentChar
-			// verificar se nesse round o personagem já jogou.
+	decrease(amount) {
+		this.value = amount;
+		if (this.value < 0) {
+			this.value = 0;
 		}
-	};
+		this.draw();
+		return (this.value === 0);
+	}
 
-	const emitEvent = (socket) => {
-		socket.emit('EXECUTE_ACTION', {
-			...event
-		});
-	};
+	draw() {
+		this.bar.clear();
+		this.bar.fillStyle(0xffffff);
+		this.bar.fillRect(this.x + 2, this.y + 2, 76, 12);
 
-	return {
-		...char,
-		sprite,
-		skillSelected,
-		targetSelected,
-		emitEvent
-	};
+		this.bar.fillStyle(0x1984DC);
+		var d = Math.floor(this.p * this.value);
+		this.bar.fillRect(this.x + 2, this.y + 2, d, 12);
+	}
+}
+
+export class Sprite extends Phaser.GameObjects.Sprite {
+	#event = { skillId: null, targetId: null };
+	id = null;
+	#char = {};
+
+	constructor(scene, char, { x, y, isFlip }) {
+		super(scene, x, y);
+		this.#char = char;
+		this.id = char.id;
+		this.setInteractive();
+		this.setTexture('cap');
+		this.setPosition(x, y);
+		this.setFlipX(isFlip);
+
+		scene.add.existing(this);
+
+		this.hp = new HealthBar(scene, x - 50, y - 70);
+		this.stamina = new StaminaBar(scene, x - 50, y - 60);
+		scene.add.text(x - 50, y - 80, char.name);
+	}
+
+	skillSelected(skillId = '') {
+		this.#event.skillId = skillId;
+	}
+
+	targetSelected(targetId = '') {
+		if (this.#event.skillId) {
+			this.#event.targetId = targetId;
+		}
+	}
+
+	rechargeStamina(socket) {
+		socket.emit('RECHARGE_STAMINA', {});
+		this.#event.skillId = null;
+		this.#event.targetId = null;
+	}
+
+	emitEvent(socket) {
+		if (this.#event.skillId || this.#event.targetId) {
+			socket.emit('EXECUTE_ACTION', {
+				...this.#event
+			});
+
+			this.#event.skillId = null;
+			this.#event.targetId = null;
+		}
+	}
+
+	updateHealthBar(value) {
+		this.hp.decrease(value);
+	}
+
+	updateStaminaBar(value) {
+		this.stamina.decrease(value);
+	}
 }

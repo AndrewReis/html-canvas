@@ -1,12 +1,14 @@
 import { ICharacter, IPlayer, ISkill } from 'src/types';
 
 const skills: ISkill[] = [
-	{ id: '1', name: 'rasengan', cost: 20, value: 40, type: 'damage', key: '', blocked: false, charId: 'naruto-id' },
-	{ id: '2', name: 'chute', cost: 50, value: 20, type: 'damage', key: '', blocked: false, charId: 'naruto-id' },
-	{ id: '3', name: 'chidori', cost: 50, value: 20, type: 'damage', key: '', blocked: false, charId: 'sasuke-id' },
+	{ id: '1', name: 'rasengan', cost: 10, value: 10, type: 'damage', key: '', blocked: false, charId: 'naruto-id' },
+	{ id: '2', name: 'chute', cost: 10, value: 20, type: 'damage', key: '', blocked: false, charId: 'naruto-id' },
+	{ id: '3', name: 'chidori', cost: 50, value: 100, type: 'damage', key: '', blocked: false, charId: 'sasuke-id' },
 	{ id: '4', name: 'bola de fogo', cost: 50, value: 20, type: 'damage', key: '', blocked: false, charId: 'sasuke-id' },
-	{ id: '5', name: 'espada relampago', cost: 50, value: 20, type: 'damage', key: '', blocked: false, charId: 'kakashi-id' },
+	{ id: '5', name: 'espada relampago', cost: 100, value: 20, type: 'damage', key: '', blocked: false, charId: 'kakashi-id' },
 	{ id: '6', name: 'invocação', cost: 50, value: 20, type: 'damage', key: '', blocked: false, charId: 'kakashi-id' },
+	{ id: '7', name: 'gomu no pistol', cost: 100, value: 20, type: 'damage', key: '', blocked: false, charId: 'luffy-id' },
+	{ id: '8', name: 'gomu no stamp', cost: 50, value: 20, type: 'damage', key: '', blocked: false, charId: 'luffy-id' },
 ];
 
 const naruto: ICharacter = {
@@ -15,7 +17,7 @@ const naruto: ICharacter = {
 	attrs: {
 		health: 100,
 		stamina: 100,
-		speed: 3
+		speed: 5
 	},
 	skills: skills.filter(s => s.charId === 'naruto-id')
 };
@@ -26,7 +28,7 @@ const sasuke: ICharacter = {
 	attrs: {
 		health: 100,
 		stamina: 100,
-		speed: 3
+		speed: 6
 	},
 	skills: skills.filter(s => s.charId === 'sasuke-id')
 };
@@ -37,9 +39,20 @@ const kakashi: ICharacter = {
 	attrs: {
 		health: 100,
 		stamina: 100,
-		speed: 2
+		speed: 4
 	},
 	skills: skills.filter(s => s.charId === 'kakashi-id')
+};
+
+const luffy: ICharacter = {
+	id: 'luffy-id',
+	name: 'luffy',
+	attrs: {
+		health: 100,
+		stamina: 100,
+		speed: 2
+	},
+	skills: skills.filter(s => s.charId === 'luffy-id')
 };
 
 const player: IPlayer = {
@@ -57,6 +70,7 @@ const adversary: IPlayer = {
 player.team.push(naruto);
 player.team.push(sasuke);
 adversary.team.push(kakashi);
+adversary.team.push(luffy);
 
 export {
 	player,
